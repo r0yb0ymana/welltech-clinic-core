@@ -60,3 +60,60 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* =========================
+   TYPOGRAPHY FIXES
+   ========================= */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--color-neutral-900);
+}
+
+p, label, span, div {
+  color: var(--color-neutral-900);
+}
+
+/* =========================
+   FORM CONTROLS FIXES
+   ========================= */
+
+input,
+textarea,
+select {
+  color: var(--color-neutral-900);
+  background-color: #ffffff;
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-primary-600);
+  box-shadow: 0 0 0 1px var(--color-primary-600);
+}
+
+/* Placeholder visibility */
+::placeholder {
+  color: var(--color-neutral-500);
+  opacity: 1;
+}
+
+/* =========================
+   BUTTON BASELINE
+   ========================= */
+
+button {
+  font-weight: 500;
+}
+
+/* =========================
+   SAFETY: REMOVE ACCIDENTAL OPACITY
+   ========================= */
+
+main, main * {
+  opacity: 1;
+}

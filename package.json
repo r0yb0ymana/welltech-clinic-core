@@ -9,7 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "appwrite": "^21.5.0",
     "next": "16.1.0",
+    "node-appwrite": "^21.0.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
