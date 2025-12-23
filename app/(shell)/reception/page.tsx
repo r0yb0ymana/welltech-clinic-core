@@ -6,7 +6,16 @@ import { requireSignedIn } from '@/app/lib/require-signed-in'
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
 
-function getOne(sp: Record<string, any>, key: string) {
+interface QueuedVisit {
+  visitId?: string
+  patientId?: string
+  fullName?: string
+  chiefComplaint?: string
+  checkInAt?: string
+  status?: string
+}
+
+function getOne(sp: Record<string, unknown>, key: string) {
   const v = sp?.[key]
   if (Array.isArray(v)) return v[0]
   return typeof v === 'string' ? v : ''
@@ -75,7 +84,7 @@ export default async function ReceptionPage(props: { searchParams?: SearchParams
           <div className="mt-4 text-sm text-neutral-600">No queued visits.</div>
         ) : (
           <ul className="mt-4 divide-y divide-neutral-200">
-            {visits.map((v: any) => (
+            {visits.map((v) => (
               <li key={v.visitId} className="py-3">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">

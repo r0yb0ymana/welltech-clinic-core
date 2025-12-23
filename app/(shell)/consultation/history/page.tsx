@@ -5,7 +5,27 @@ import { redirect } from "next/navigation"
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
 
-function getOne(sp: Record<string, any>, key: string) {
+interface VisitDocument {
+  $id?: string
+  patientId?: string
+  status?: string
+  chiefComplaint?: string
+  checkInAt?: string
+  consultStartAt?: string
+  consultEndAt?: string
+  soapUpdatedAt?: string
+  soapUpdatedBy?: string
+  [key: string]: unknown
+}
+
+interface PatientDocument {
+  $id?: string
+  clinicId?: string
+  fullName?: string
+  [key: string]: unknown
+}
+
+function getOne(sp: Record<string, unknown>, key: string) {
   const v = sp?.[key]
   if (Array.isArray(v)) return v[0]
   return typeof v === "string" ? v : ""
@@ -38,7 +58,7 @@ function envIds() {
   return { databaseId, visitsId, patientsId, clinicId }
 }
 
-function fmt(dt: any) {
+function fmt(dt: unknown) {
   if (!dt) return "-"
   try {
     return new Date(String(dt)).toLocaleString()
@@ -77,9 +97,9 @@ async function getPatientName(patientId: string) {
   // Fetch by id, then verify clinic isolation.
   // (Yes: this is N+1. With limit <= 50 it’s fine for MVP.)
   try {
-    const p: any = await db.getDocument(databaseId, patientsId, patientId)
+    const p = (await db.getDocument(databaseId, patientsId, patientId)) as PatientDocument
     if (String(p.clinicId) !== String(clinicId)) return "Unknown patient"
-    return p.fullName || "Unknown patient"
+    return String(p.fullName || "Unknown patient")
   } catch {
     return "Unknown patient"
   }
@@ -94,11 +114,11 @@ export default async function ConsultationHistoryPage(props: { searchParams?: Se
   const allowed = new Set(["queued", "in_consult", "completed"])
   if (!allowed.has(status)) redirect("/consultation/history?status=completed")
 
-  const visits = await fetchVisits({ patientId: patientId || undefined, status, limit: 50 })
+  const visits = (await fetchVisits({ patientId: patientId || undefined, status, limit: 50 })) as VisitDocument[]
 
   // Resolve patient names (MVP approach)
   const patientNameById = new Map<string, string>()
-  for (const v of visits as any[]) {
+  for (const v of visits) {
     const pid = String(v.patientId || "")
     if (!pid) continue
     if (!patientNameById.has(pid)) {
@@ -165,7 +185,7 @@ export default async function ConsultationHistoryPage(props: { searchParams?: Se
               </thead>
 
               <tbody className="text-sm text-neutral-900">
-                {(visits as any[]).map((v) => {
+                {visits.map((v) => {
                   const pid = String(v.patientId || "")
                   const patientName = patientNameById.get(pid) || "Unknown patient"
 

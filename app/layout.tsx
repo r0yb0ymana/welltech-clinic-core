@@ -1,27 +1,20 @@
-import "./globals.css";
-import { Inter, Poppins } from "next/font/google";
+// app/layout.tsx
+import type { Metadata } from "next"
+import "./globals.css"
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-body",
-});
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-  variable: "--font-heading",
-});
+export const metadata: Metadata = {
+  title: "WellTech Clinic Core",
+  description: "Phase 0",
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${poppins.variable}`}>
-        {children}
-      </body>
+      <body style={{ background: "black", color: "white" }}>{children}</body>
     </html>
-  );
+  )
 }

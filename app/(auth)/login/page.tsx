@@ -1,30 +1,10 @@
-import { login } from './action'
+import { redirect } from "next/navigation"
 
-export default function LoginPage() {
-  return (
-    <form
-      action={login}
-      style={{ maxWidth: 360, margin: '80px auto' }}
-    >
-      <h1>Login</h1>
-
-      <input
-        name="email"
-        type="email"
-        placeholder="Email"
-        required
-        style={{ display: 'block', width: '100%', marginBottom: 12 }}
-      />
-
-      <input
-        name="password"
-        type="password"
-        placeholder="Password"
-        required
-        style={{ display: 'block', width: '100%', marginBottom: 12 }}
-      />
-
-      <button type="submit">Sign in</button>
-    </form>
-  )
+  // REMOVE IN PHASE 1:
+  // Phase 0 bypass. Real login will replace this route.
+  if (process.env.WT_AUTH_BYPASS === "1") {
+    redirect("/reception")
+  }
+  // No login in Phase 0
+  return null
 }

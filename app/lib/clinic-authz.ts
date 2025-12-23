@@ -1,69 +1,59 @@
-import { cookies } from "next/headers"
+// app/lib/clinic-authz.ts
 import { redirect } from "next/navigation"
-import { Client, Account, Databases } from "node-appwrite"
+import { requireSignedIn } from "./require-signed-in"
 
-/**
- * Internal helper: build Appwrite client from session secret
- */
-function appwriteFromSession(secret: string) {
-  const client = new Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT!)
-    .setProject(process.env.APPWRITE_PROJECT_ID!)
-    .setSession(secret)
+type ClinicRole = "admin" | "doctor" | "reception"
 
-  return {
-    account: new Account(client),
-    databases: new Databases(client),
-  }
+export type Actor = {
+  id: string
+  role: ClinicRole
+  clinicId: string
 }
 
-/**
- * Require a valid signed-in session
- */
-export async function requireSignedIn() {
-  const cookieStore = await cookies()
-  const secret = cookieStore.get("wt_session")?.value
-
-  if (!secret) {
-    redirect("/login?error=Please%20sign%20in")
-  }
-
-  return secret
+function getEnv(name: string) {
+  const v = process.env[name]
+  if (!v) throw new Error(`Missing ${name} in .env.local`)
+  return v
 }
 
-/**
- * Require user to belong to a clinic with a given role
- */
-export async function requireClinicRole(requiredRole: "reception" | "doctor") {
-  const secret = await requireSignedIn()
-  const { account, databases } = appwriteFromSession(secret)
+// Role hierarchy: admin > doctor > reception
+function satisfiesRole(role: ClinicRole, required: ClinicRole): boolean {
+  if (role === "admin") return true
+  if (role === required) return true
+  if (role === "doctor" && required === "reception") return true
+  return false
+}
 
-  // Get current Appwrite user
-  const user = await account.get()
+function normalizeBypassRole(): ClinicRole {
+  const raw = (process.env.WT_AUTH_BYPASS_ROLE || "admin").toLowerCase().trim()
+  if (raw === "admin") return "admin"
+  if (raw === "doctor") return "doctor"
+  if (raw === "reception") return "reception"
+  return "admin"
+}
 
-  // Query clinic_users collection
-  const result = await databases.listDocuments(
-    process.env.APPWRITE_DATABASE_ID!,
-    process.env.APPWRITE_CLINIC_USERS_COLLECTION_ID!,
-    [
-      `equal("userId","${user.$id}")`,
-      `equal("clinicId","${process.env.WT_CLINIC_ID}")`,
-    ]
-  )
+  const clinicId = getEnv("WT_CLINIC_ID")
+  // REMOVE IN PHASE 1:
+  // Phase 0 auth bypass only. Must never ship to production.
+  // Replace with real Appwrite session + clinic_users role resolution.
+  const bypass = process.env.WT_AUTH_BYPASS === "1"
 
-  if (result.total === 0) {
-    redirect("/login?error=No%20clinic%20access")
+  if (bypass) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("WT_AUTH_BYPASS must never be enabled in production!")
+    }
+
+    const signedIn = await requireSignedIn()
+    const role = normalizeBypassRole()
+
+    if (!satisfiesRole(role, requiredRole)) {
+      throw new Error(
+        `Insufficient permissions: WT_AUTH_BYPASS_ROLE=${role} does not satisfy required ${requiredRole}`
+      )
+    }
+
+    return { id: signedIn.userId, role, clinicId }
   }
 
-  const membership = result.documents[0]
-  const role = membership.role as string
-
-  if (role !== requiredRole) {
-    redirect("/login?error=Insufficient%20permissions")
-  }
-
-  return {
-    user,
-    clinicRole: role,
-  }
+  redirect("/login")
 }

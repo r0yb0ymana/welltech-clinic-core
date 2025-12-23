@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:bypass": "powershell -NoProfile -Command \"$env:WT_AUTH_BYPASS='1'; $env:WT_AUTH_BYPASS_ROLE='reception'; next dev\"",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "clean": "powershell -NoProfile -Command \"Remove-Item -Recurse -Force .next\""
   },
   "dependencies": {
     "appwrite": "^21.5.0",
